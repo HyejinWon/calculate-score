@@ -49,15 +49,40 @@ def f_measure(tp, fp, fn, beta=1):
         return 0.
     else:
         return (1 + beta ** 2) *(f_percision * f_recall) / ((beta **2 *f_percision) + f_recall)
-
+'''
 def accuracy_macro_score(ref_line, hypo_line):
     correct = 0
-    
+    w = open('./different_result.txt','w')    
     for ref, hypo in zip(ref_line, hypo_line):
-        if ref == hypo:
+        if ref.strip() == hypo.strip():
             correct += 1
-        
+        else:
+            w.write('---------------------\n'+ref.strip()+'\n'+hypo.strip()+'\n--------------------------\n')
+    w.close()
     return correct, len(ref_line)    
+'''
+def accuracy_macro_score_final(ref_line, hypo_line):
+    correct = 0
+    total = 0
+    w = open('./different_result.txt','w')
+    for ref, hypo in zip(ref_line, hypo_line):
+        ref = ref.strip()
+        hypo = hypo.strip()
+        flag = 0
+        for index in range(len(ref)):
+            try:
+                if ref[index] != hypo[index]:
+                    flag = 1
+                else:
+                    correct += 1
+            except IndexError:
+                flag = 1
+                continue
+        total += len(ref)
+        if flag == 1:
+            w.write('---------------------\n'+ref.strip()+'\n'+hypo.strip()+'\n--------------------------\n')
+    w.close()
+    return correct, total
 
 def accuracy(length, correct):
     return float(correct) / length
@@ -81,10 +106,12 @@ if __name__ == "__main__":
     pline = p.readlines()
 
     tp, fp, fn = corpus_macro_score(tline, pline)
-    total_score, length = accuracy_macro_score(tline, pline)
+    #total_score, length = accuracy_macro_score(tline, pline)
     #total, correct = accuracy_macro_score(tline, pline)
+    correct, total = accuracy_macro_score_final(tline, pline)
     gleu_result = score_gleu(tline, pline)
 
     print('Precision : ',precision(tp, fp), 'Recall : ',recall(tp, fn), 'F1 : ',f_measure(tp,fp,fn) )
-    print('Acc : ', accuracy(length, total_score))
+    print('F0.5 : ',f_measure(tp,fp,fn,beta=0.5))
+    print('Acc : ', accuracy(total, correct))
     print('GLEU : ', gleu_result)
